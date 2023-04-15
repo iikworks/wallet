@@ -1,0 +1,10 @@
+@import url('../fonts/sf-pro-display/stylesheet.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    @apply bg-gray-100 text-gray-700;
+    font-family: 'SF Pro Display', sans-serif;
+}
