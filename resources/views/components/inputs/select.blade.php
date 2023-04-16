@@ -6,7 +6,7 @@
     <select id="{{ $name }}"
             name="{{ $name }}"
             @if($collection->count() == 0) disabled @endif
-            class="@if($collection->count() == 0) opacity-50 @endif font-medium bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full py-2 px-3">
+            class="@if($collection->count() == 0) opacity-50 @endif bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full py-2 px-3">
         @if($collection->count() == 0)
             <option>{{ __('main.data_empty') }}</option>
         @endif

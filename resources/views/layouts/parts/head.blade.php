@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width"/>
     <title>{{ $title }}</title>
     <meta name="theme-color" content="#6B7280"/>
+    <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/favicon.png') }}"/>
     @if(app()->hasDebugModeEnabled())
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.4/flowbite.min.css" rel="stylesheet"/>

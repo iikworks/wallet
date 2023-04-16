@@ -12,7 +12,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
-class TransactionsController extends Controller
+class TransactionController extends Controller
 {
     public function list(Request $request, ListView $view): View|Application|Factory
     {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Controllers\Transactions;
+namespace Tests\Feature\Controllers\Transaction;
 
 use App\Models\Account;
 use App\Models\Organization;

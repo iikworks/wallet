@@ -16,7 +16,7 @@ class ListView
         $transactions = Transaction::query()
             ->whereIn('account_id', $accountsIds)
             ->latest('date')
-            ->paginate(30, page: $page);
+            ->paginate(50, page: $page);
 
         return view('transactions.list', [
             'title' => __('accounts.title'),

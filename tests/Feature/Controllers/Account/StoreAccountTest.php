@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Controllers\Accounts;
+namespace Tests\Feature\Controllers\Account;
 
 use App\Models\Account;
 use App\Models\Bank;

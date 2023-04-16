@@ -1,11 +1,13 @@
 <?php
 
-use App\Http\Controllers\AccountsController;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\BankController;
+use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\TransactionsController;
+use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,21 +26,47 @@ Route::middleware('auth')->group(function () {
     Route::get('logout', [LogoutController::class, 'logout'])->name('logout');
 
     Route::prefix('accounts')->group(function () {
-        Route::get('', [AccountsController::class, 'list'])->name('accounts');
-        Route::post('', [AccountsController::class, 'store'])->name('accounts');
-        Route::get('add', [AccountsController::class, 'add'])->name('accounts.add');
+        Route::get('', [AccountController::class, 'list'])->name('accounts');
+        Route::get('add', [AccountController::class, 'add'])->name('accounts.add');
+
+        Route::post('', [AccountController::class, 'store'])->name('accounts');
     });
 
     Route::prefix('transactions')->group(function () {
-        Route::get('', [TransactionsController::class, 'list'])->name('transactions');
-        Route::post('', [TransactionsController::class, 'store'])->name('transactions');
-        Route::get('add', [TransactionsController::class, 'add'])->name('transactions.add');
+        Route::get('', [TransactionController::class, 'list'])->name('transactions');
+        Route::get('add', [TransactionController::class, 'add'])->name('transactions.add');
+
+        Route::post('', [TransactionController::class, 'store'])->name('transactions');
+    });
+
+    Route::middleware('admin')->group(function () {
+        Route::prefix('organizations')->group(function () {
+            Route::get('', [OrganizationController::class, 'list'])->name('organizations');
+            Route::get('add', [OrganizationController::class, 'add'])->name('organizations.add');
+            Route::get('{id}', [OrganizationController::class, 'edit'])->name('organizations.edit');
+            Route::get('{id}/delete', [OrganizationController::class, 'delete'])->name('organizations.delete');
+
+            Route::post('', [OrganizationController::class, 'store'])->name('organizations');
+            Route::post('{id}', [OrganizationController::class, 'update'])->name('organizations.update');
+            Route::delete('{id}', [OrganizationController::class, 'destroy'])->name('organizations.destroy');
+        });
+
+        Route::prefix('banks')->group(function () {
+            Route::get('', [BankController::class, 'list'])->name('banks');
+            Route::post('', [BankController::class, 'store'])->name('banks');
+            Route::get('add', [BankController::class, 'add'])->name('banks.add');
+
+            Route::post('', [BankController::class, 'store'])->name('banks');
+            Route::post('{id}', [BankController::class, 'update'])->name('banks.update');
+            Route::delete('{id}', [BankController::class, 'destroy'])->name('banks.destroy');
+        });
     });
 });
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'form'])->name('login');
-    Route::post('login', [LoginController::class, 'login'])->name('login');
     Route::get('register', [RegisterController::class, 'form'])->name('register');
+
+    Route::post('login', [LoginController::class, 'login'])->name('login');
     Route::post('register', [RegisterController::class, 'store'])->name('register');
 });
