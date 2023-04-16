@@ -70,10 +70,12 @@ readonly class DashboardView
         })->take(10);
     }
 
-    private function hasOtherCurrencies(User $user, string $currency): bool
+    private function hasOtherCurrencies(User $user, string $mainCurrency): bool
     {
         $currencies = $this->getCurrencies();
-        unset($currencies[$currency]);
+        $currencies = $currencies->reject(function (string $element) use ($mainCurrency) {
+            return $element == $mainCurrency;
+        });
 
         foreach ($currencies as $currency) {
             if ($user->accounts
