@@ -19,7 +19,8 @@ class AddView
             ->get());
 
         $organizations[0] = [
-            'title' => 'нет',
+            'title' => '&nbsp;',
+            'subtitle' => __('main.no'),
             'children' => collect(),
         ];
 
@@ -29,7 +30,7 @@ class AddView
         return view('organizations.add', [
             'title' => __('organizations.adding'),
             'organization' => null,
-            'organizations' => $organizations,
+            'organizations' => $organizations->toArray(),
             'action' => $action,
             'parentId' => $parentId,
         ]);

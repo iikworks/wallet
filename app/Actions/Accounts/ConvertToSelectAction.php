@@ -12,35 +12,33 @@ readonly class ConvertToSelectAction
         $accountsForSelect = collect();
 
         foreach ($accounts as $account) {
-            $string = '';
             switch ($account->type) {
                 case Account::CASH_TYPE:
-                    $string = sprintf(
-                        '%s ID %d в %s',
-                        __('accounts.types.' . str_replace(' ', '_', $account->type)),
-                        $account->id,
-                        $account->currency,
-                    );
+                    $title = __('accounts.types.' . str_replace(' ', '_', $account->type));
                     break;
                 case Account::BANK_ACCOUNT_TYPE:
-                    $string = sprintf(
-                        '%s %s в %s',
+                    $title = sprintf(
+                        '%s %s',
                         __('accounts.types.' . str_replace(' ', '_', $account->type)),
                         hide_bank_account_number($account->details->getNumber()),
-                        $account->currency,
                     );
                     break;
                 case Account::CARD_TYPE:
-                    $string = sprintf(
-                        '%s %s в %s',
+                    $title = sprintf(
+                        '%s %s',
                         __('accounts.types.' . str_replace(' ', '_', $account->type)),
                         hide_card_number($account->details->getNumber()),
-                        $account->currency,
                     );
+                    break;
+                default:
+                    $title = '';
                     break;
             }
 
-            $accountsForSelect[$account->id] = $string;
+            $accountsForSelect[$account->id] = [
+                'title' => $title,
+                'subtitle' => currency_number($account->balance, $account->currency),
+            ];
         }
 
         return $accountsForSelect;

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
+use Illuminate\Support\Collection;
 
 class EditView
 {
@@ -21,11 +22,12 @@ class EditView
             ->get());
 
         $organizations[0] = [
-            'title' => 'нет',
+            'title' => '&nbsp;',
+            'subtitle' => __('main.no'),
             'children' => collect(),
         ];
 
-        unset($organizations[$organizationId]);
+        $organizations = $this->deleteOrganizationByID($organizationId, $organizations);
 
         $action = route('organizations.update', ['id' => $organization->id]);
         $parentId = $organization->parent_id ?: 0;
@@ -33,9 +35,31 @@ class EditView
         return view('organizations.add', [
             'title' => __('organizations.editing'),
             'organization' => $organization,
-            'organizations' => $organizations,
+            'organizations' => $organizations->toArray(),
             'action' => $action,
             'parentId' => $parentId,
         ]);
+    }
+
+    public function deleteOrganizationByID(int $organizationId, Collection $organizations): Collection|null
+    {
+        return $this->forgetRecursive($organizations, $organizationId);
+    }
+
+    function forgetRecursive($collection, $key)
+    {
+        $collection->forget($key);
+
+        $collection->transform(function ($value) use ($key) {
+            if ($value instanceof Collection) {
+                $this->forgetRecursive($value, $key);
+            } elseif (is_array($value)) {
+                $this->forgetRecursive(collect($value), $key);
+            }
+
+            return $value;
+        });
+
+        return $collection;
     }
 }

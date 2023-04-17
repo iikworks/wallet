@@ -13,6 +13,7 @@ readonly class ConvertToSelectAction
         foreach ($organizations as $organization) {
             $organizationsForSelect[$organization->id] = [
                 'title' => $organization->title,
+                'subtitle' => $organization->vulgar_title,
                 'children' => $this->convertChildren($organization->children),
             ];
         }
@@ -27,6 +28,7 @@ readonly class ConvertToSelectAction
         foreach ($children as $child) {
             $childrenForSelect[$child->id] = [
                 'title' => $child->title,
+                'subtitle' => $child->vulgar_title,
                 'children' => $this->convertChildren($child->children),
             ];
         }

@@ -8,12 +8,10 @@
                 {{ $title }}
             </div>
             <div class="mt-5 space-y-3">
-                <x-inputs.select-children
-                    name="parent_id"
-                    :collection="$organizations"
-                    :selected="old('parent_id', $parentId)"
-                    :title="__('validation.attributes.parent_id')"
-                />
+                <livewire:select :list="$organizations"
+                                 input-name="parent_id"
+                                 :title="__('validation.attributes.parent_id')"
+                                 :selected="$organization ? $organization->parent_id : 0"/>
                 <x-inputs.input
                     type="text"
                     name="title"

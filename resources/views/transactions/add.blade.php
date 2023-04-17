@@ -7,24 +7,18 @@
                 {{ $title }}
             </div>
             <div class="mt-5 space-y-3">
-                <x-inputs.select
-                    name="account_id"
-                    :collection="$accounts"
-                    :selected="old('account_id', $accounts->take(1)->keys()->first())"
-                    :title="__('validation.attributes.account_id')"
-                />
-                <x-inputs.select-children
-                    name="organization_id"
-                    :collection="$organizations"
-                    :selected="old('organization_id', $organizations->take(1)->keys()->first())"
-                    :title="__('validation.attributes.organization_id')"
-                />
-                <x-inputs.select
-                    name="type"
-                    :collection="$types"
-                    :selected="old('type', $types->first())"
-                    :title="__('validation.attributes.type')"
-                />
+                <livewire:select :list="$accounts"
+                                 input-name="account_id"
+                                 :title="__('validation.attributes.account_id')"
+                                 :selected="array_key_first($accounts)"/>
+                <livewire:select :list="$organizations"
+                                 input-name="organization_id"
+                                 :title="__('validation.attributes.organization_id')"
+                                 :selected="array_key_first($organizations)"/>
+                <livewire:select :list="$types"
+                                 input-name="type"
+                                 :title="__('validation.attributes.type')"
+                                 :selected="array_key_first($types)"/>
                 <x-inputs.input
                     type="number"
                     name="amount"

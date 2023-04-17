@@ -20,15 +20,21 @@ class AddView
             ->where('parent_id', null)
             ->with('childrenRecursive')
             ->get());
-        $types = collect([
-            Transaction::EXPENSE_TYPE => __('transactions.types.expense'),
-            Transaction::REPLENISHMENT_TYPE => __('transactions.types.replenishment'),
-        ]);
+        $types = [
+            Transaction::EXPENSE_TYPE => [
+                'title' => __('transactions.types.expense'),
+                'subtitle' => '',
+            ],
+            Transaction::REPLENISHMENT_TYPE => [
+                'title' => __('transactions.types.replenishment'),
+                'subtitle' => '',
+            ]
+        ];
 
         return view('transactions.add', [
             'title' => __('transactions.adding'),
-            'accounts' => $accounts,
-            'organizations' => $organizations,
+            'accounts' => $accounts->toArray(),
+            'organizations' => $organizations->toArray(),
             'types' => $types,
             'defaultDate' => now()->format('Y-m-d\TH:i'),
         ]);
