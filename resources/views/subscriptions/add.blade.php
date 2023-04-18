@@ -1,7 +1,7 @@
 @extends('layouts.dashboard')
 @section('content')
     <x-page-struct.form>
-        <form method="POST" action="{{ route('transactions') }}">
+        <form method="POST" action="{{ route('subscriptions') }}">
             @csrf
             <div class="font-medium text-2xl">
                 {{ $title }}
@@ -15,10 +15,10 @@
                                  input-name="organization_id"
                                  :title="__('validation.attributes.organization_id')"
                                  :selected="array_key_first($organizations)"/>
-                <livewire:select :list="$types"
-                                 input-name="type"
-                                 :title="__('validation.attributes.type')"
-                                 :selected="array_key_first($types)"/>
+                <livewire:select :list="$currencies"
+                                 input-name="currency"
+                                 :title="__('validation.attributes.currency')"
+                                 :selected="array_key_first($currencies)"/>
                 <x-inputs.input
                     type="number"
                     name="amount"
@@ -29,11 +29,14 @@
                     :is-required="true"
                 />
                 <x-inputs.input
-                    type="datetime-local"
-                    name="date"
-                    :value="old('date', $defaultDate)"
-                    :placeholder="__('validation.attributes.date')"
-                    :title="__('validation.attributes.date')"
+                    type="number"
+                    name="day"
+                    step="1"
+                    min="1"
+                    max="31"
+                    :value="old('day', 1)"
+                    :placeholder="__('validation.attributes.day')"
+                    :title="__('validation.attributes.day')"
                     :is-required="true"
                 />
             </div>

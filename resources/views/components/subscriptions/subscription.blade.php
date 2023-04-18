@@ -4,10 +4,12 @@
             {{ Str::limit($subscription->organization->title, 15, '...') }}
         </div>
         <div class="text-gray-200 opacity-70 text-sm">
-            @if($daysBeforePayment != 0)
-                через {{ trans_choice(':days день|:days дня|:days дней', $daysBeforePayment, ['days' => $daysBeforePayment]) }}
+            @if($daysBeforePayment > 1)
+                {{ trans_choice('main.after_days', $daysBeforePayment, ['days' => $daysBeforePayment]) }}
+            @elseif($daysBeforePayment == 1)
+                {{ __('main.tomorrow') }}
             @else
-                сегодня
+                {{ __('main.today') }}
             @endif
         </div>
     </div>

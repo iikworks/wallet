@@ -1,8 +1,8 @@
 <?php
 
-namespace App\View\Transactions;
+namespace App\View\Subscriptions;
 
-use App\Models\Transaction;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
@@ -13,14 +13,14 @@ class ListView
     public function __invoke(User $user, int $page): View|Application|Factory
     {
         $accountsIds = $user->accounts->pluck('id');
-        $transactions = Transaction::query()
+        $subscriptions = Subscription::query()
             ->whereIn('account_id', $accountsIds)
-            ->latest('date')
-            ->paginate(50, page: $page);
+            ->orderBy('day')
+            ->paginate(page: $page);
 
-        return view('transactions.list', [
-            'title' => __('transactions.title'),
-            'transactions' => $transactions,
+        return view('subscriptions.list', [
+            'title' => __('subscriptions.title'),
+            'subscriptions' => $subscriptions,
         ]);
     }
 }

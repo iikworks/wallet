@@ -3,6 +3,7 @@
 namespace App\View;
 
 use App\Actions\Accounts\ConvertCurrencyAction;
+use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
@@ -40,7 +41,7 @@ readonly class DashboardView
             'latestTransactions' => $latestTransactions,
             'latestTransaction' => $latestTransactions->first(),
             'transactionsCount' => $this->getTransactionsCount($user),
-            'subscriptions' => $this->getSubscriptions($user),
+            'subscriptions' => $this->filterSubscriptions($this->getSubscriptions($user), $now),
             'subscriptionsCount' => $this->getSubscriptionsCount($user),
             'expensesAtThisMonth' => $this->getTransactionsSumAtThisMonth(
                 $user,
@@ -122,6 +123,13 @@ readonly class DashboardView
         }
 
         return $transactionsCount;
+    }
+
+    public function filterSubscriptions(Collection $subscriptions, Carbon $now): Collection
+    {
+        return $subscriptions->sortBy(function (Subscription $subscription) use ($now) {
+            return $subscription->daysBeforePayment();
+        });
     }
 
     private function getSubscriptions(User $user): Collection

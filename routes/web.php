@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,13 @@ Route::middleware('auth')->group(function () {
         Route::get('add', [TransactionController::class, 'add'])->name('transactions.add');
 
         Route::post('', [TransactionController::class, 'store'])->name('transactions');
+    });
+
+    Route::prefix('subscriptions')->group(function () {
+        Route::get('', [SubscriptionController::class, 'list'])->name('subscriptions');
+        Route::get('add', [SubscriptionController::class, 'add'])->name('subscriptions.add');
+
+        Route::post('', [SubscriptionController::class, 'store'])->name('subscriptions');
     });
 
     Route::middleware('admin')->group(function () {

@@ -41,12 +41,10 @@
                         :title="__('validation.attributes.balance')"
                         :is-required="true"
                     />
-                    <x-inputs.select
-                        name="currency"
-                        :collection="$currencies"
-                        :selected="old('balance', $currencies[$currency])"
-                        :title="__('validation.attributes.currency')"
-                    />
+                    <livewire:select :list="$currencies"
+                                     input-name="currency"
+                                     :title="__('validation.attributes.currency')"
+                                     :selected="array_key_first($currencies)"/>
                     <input type="hidden" name="type" value="{{ $type }}">
                     <div class="pt-5 space-y-3">
                         <x-errors.account-details/>

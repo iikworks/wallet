@@ -14,13 +14,15 @@ class Input extends Component
     private string $value;
     private string $classes;
     private string $step;
+    private string $min;
+    private string $max;
     private string|null $title;
     private bool $isRequired;
 
     /**
      * Create a new component instance.
      */
-    public function __construct(string $type, string $name, string $placeholder = '', string $value = '', string $classes = '', string $step = '', string|null $title = null, bool $isRequired = false)
+    public function __construct(string $type, string $name, string $placeholder = '', string $value = '', string $classes = '', string $step = '', string $min = '', string $max = '', string|null $title = null, bool $isRequired = false)
     {
         $this->type = $type;
         $this->name = $name;
@@ -28,6 +30,8 @@ class Input extends Component
         $this->value = $value;
         $this->classes = $classes;
         $this->step = $step;
+        $this->min = $min;
+        $this->max = $max;
         $this->title = $title;
         $this->isRequired = $isRequired;
     }
@@ -44,6 +48,8 @@ class Input extends Component
             'value' => $this->value,
             'classes' => $this->classes,
             'step' => $this->step,
+            'min' => $this->min,
+            'max' => $this->max,
             'title' => $this->title,
             'isRequired' => $this->isRequired,
         ]);

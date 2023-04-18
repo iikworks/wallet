@@ -14,11 +14,11 @@ class StoreTransactionTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_unauthenticated_user_cant_store_a_new_account(): void
+    public function test_unauthenticated_user_cant_store_a_new_transaction(): void
     {
         $response = $this->post(route('transactions'));
         $response->assertRedirectToRoute('login');
-        $this->assertEquals(0, Account::query()->count());
+        $this->assertEquals(0, Transaction::query()->count());
     }
 
     public function test_can_store_a_new_expense_transaction(): void

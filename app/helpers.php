@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Transaction;
-use Illuminate\Support\Collection;
 
 if (!function_exists('normalize_number')) {
     function normalize_number(int $number): int|float
@@ -50,13 +49,16 @@ if (!function_exists('hide_bank_account_number')) {
 }
 
 if (!function_exists('currencies_list')) {
-    function currencies_list(): Collection
+    function currencies_list(): array
     {
         $currencies = collect(array_keys(config('constants.currencies')));
-        $list = collect();
+        $list = [];
 
         foreach ($currencies as $currency) {
-            $list[$currency] = __('main.currencies.' . $currency);
+            $list[$currency] = [
+                'title' => $currency,
+                'subtitle' => __('main.currencies.' . $currency),
+            ];
         }
 
         return $list;

@@ -54,7 +54,7 @@
     </div>
     <div class="mt-8">
         <x-page-struct.title :title="__('subscriptions.title')" :classes="'mb-3'">
-            <x-buttons.plus :link="'#'"/>
+            <x-buttons.plus :link="route('subscriptions.add')"/>
         </x-page-struct.title>
         <x-page-struct.columns :mdCols="1" :lgCols="3">
             @foreach($subscriptions as $subscription)
