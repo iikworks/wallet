@@ -53,8 +53,9 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('banks')->group(function () {
             Route::get('', [BankController::class, 'list'])->name('banks');
-            Route::post('', [BankController::class, 'store'])->name('banks');
             Route::get('add', [BankController::class, 'add'])->name('banks.add');
+            Route::get('{id}', [BankController::class, 'edit'])->name('banks.edit');
+            Route::get('{id}/delete', [BankController::class, 'delete'])->name('banks.delete');
 
             Route::post('', [BankController::class, 'store'])->name('banks');
             Route::post('{id}', [BankController::class, 'update'])->name('banks.update');

@@ -118,7 +118,7 @@ class UpdateOrganizationTest extends TestCase
         $response->assertSessionHasErrorsIn('parent_id');
     }
 
-    public function test_title_field_must_be_string_to_store_a_new_organization()
+    public function test_title_field_must_be_string_to_update_organization()
     {
         $organization = Organization::factory()->create();
         $user = User::factory()->create([
@@ -135,7 +135,7 @@ class UpdateOrganizationTest extends TestCase
         $response->assertSessionHasErrorsIn('title');
     }
 
-    public function test_title_field_must_be_max_100_length_to_store_a_new_organization()
+    public function test_title_field_must_be_max_100_length_to_update_organization()
     {
         $organization = Organization::factory()->create();
         $user = User::factory()->create([
@@ -152,7 +152,7 @@ class UpdateOrganizationTest extends TestCase
         $response->assertSessionHasErrorsIn('title');
     }
 
-    public function test_vulgar_title_field_must_be_string_to_store_a_new_organization()
+    public function test_vulgar_title_field_must_be_string_to_update_organization()
     {
         $organization = Organization::factory()->create();
         $user = User::factory()->create([
@@ -169,7 +169,7 @@ class UpdateOrganizationTest extends TestCase
         $response->assertSessionHasErrorsIn('vulgar_title');
     }
 
-    public function test_vulgar_title_field_must_be_max_100_length_to_store_a_new_organization()
+    public function test_vulgar_title_field_must_be_max_100_length_to_update_organization()
     {
         $organization = Organization::factory()->create();
         $user = User::factory()->create([

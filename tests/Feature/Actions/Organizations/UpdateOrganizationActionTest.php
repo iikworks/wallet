@@ -16,7 +16,7 @@ class UpdateOrganizationActionTest extends TestCase
     {
         $this->expectException(ModelNotFoundException::class);
 
-        (new UpdateOrganizationAction())(1, [
+        (new UpdateOrganizationAction)(1, [
             'parent_id' => 1,
             'title' => 'Organization',
             'vulgar' => 'Vulgar Organization',
