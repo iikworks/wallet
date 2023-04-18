@@ -4,7 +4,6 @@ namespace App\View\Organizations;
 
 use App\Actions\Organizations\ConvertToSelectAction as ConvertOrganizationsToSelectAction;
 use App\Models\Organization;
-use App\Models\User;
 use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
@@ -12,7 +11,7 @@ use Illuminate\Support\Collection;
 
 class EditView
 {
-    public function __invoke(User $user, int $organizationId): View|Application|Factory
+    public function __invoke(int $organizationId): View|Application|Factory
     {
         $organization = Organization::query()->findOrFail($organizationId);
 

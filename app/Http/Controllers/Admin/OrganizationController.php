@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Organizations\StoreRequest;
 use App\Http\Requests\Organizations\UpdateRequest;
 use App\View\Organizations\AddView;
+use App\View\Organizations\DeleteView;
 use App\View\Organizations\EditView;
 use App\View\Organizations\ListView;
 use Illuminate\Contracts\View\Factory;
@@ -25,9 +26,9 @@ class OrganizationController extends Controller
         return ($view)($request->user(), intval($request->query('page', 1)));
     }
 
-    public function add(Request $request, AddView $view): View|Application|Factory
+    public function add(AddView $view): View|Application|Factory
     {
-        return ($view)($request->user());
+        return ($view)();
     }
 
     public function store(StoreRequest $request, StoreOrganizationAction $action): RedirectResponse
@@ -41,9 +42,9 @@ class OrganizationController extends Controller
         }
     }
 
-    public function edit(Request $request, EditView $view, string $organizationId): View|Application|Factory
+    public function edit(EditView $view, string $organizationId): View|Application|Factory
     {
-        return ($view)($request->user(), intval($organizationId));
+        return ($view)(intval($organizationId));
     }
 
     public function update(UpdateRequest $request, UpdateOrganizationAction $action, string $organizationId): RedirectResponse
@@ -57,6 +58,11 @@ class OrganizationController extends Controller
                 return back()->withErrors(['parent_id' => __('organizations.not_found')]);
             } else abort(404);
         }
+    }
+
+    public function delete(string $organizationId, DeleteView $view): View|Application|Factory
+    {
+        return ($view)(intval($organizationId));
     }
 
     public function destroy(DestroyOrganizationAction $action, string $organizationId): RedirectResponse
