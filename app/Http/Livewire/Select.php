@@ -6,6 +6,7 @@ use Illuminate\Contracts\View\Factory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Select extends Component
@@ -14,6 +15,7 @@ class Select extends Component
     public bool $dropdownOpened = false;
     public mixed $selected = null;
     public string $inputName = '';
+    public mixed $searchInput = '';
     public string|null $title = null;
 
     public function select(mixed $value): void
@@ -25,6 +27,7 @@ class Select extends Component
     public function setDropdownOpened(bool $value): void
     {
         $this->dropdownOpened = $value;
+        if (!$value) $this->searchInput = '';
     }
 
     public function renderList(array $list, int $level = 1): string
@@ -38,7 +41,7 @@ class Select extends Component
                      style="padding-left: ' . $level . 'rem;"
                      >
                     <div class="font-medium">' . $element['title'] . '</div>
-                    <div>' . $element['subtitle'] . '</div>
+                    <div class="text-gray-500">' . $element['subtitle'] . '</div>
                 </div>
             ';
 
@@ -56,8 +59,20 @@ class Select extends Component
             $selectedElem = $this->findSelected($this->selected, $this->list);
         }
 
+        if (!empty($this->searchInput)) {
+            $filteredList = [];
+            foreach ($this->list as $key => $element) {
+                if (
+                    Str::contains(Str::lower($element['title']), Str::lower($this->searchInput))
+                    || Str::contains(Str::lower($element['subtitle']), Str::lower($this->searchInput))
+                ) {
+                    $filteredList[$key] = $element;
+                }
+            }
+        } else $filteredList = $this->list;
+
         return view('livewire.select', [
-            'list' => $this->list,
+            'filteredList' => $filteredList,
             'dropdownOpened' => $this->dropdownOpened,
             'selected' => $this->selected,
             'selectedElem' => $selectedElem,
