@@ -2,31 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Transactions\GetUserTransactionByIdAction;
+use App\Actions\Transactions\GetUserTransactionsAction;
 use App\Actions\Transactions\StoreTransactionAndUpdateAccountBalanceAction;
 use App\Http\Requests\Transactions\StoreRequest;
-use App\View\Transactions\AddView;
-use App\View\Transactions\ListView;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\RedirectResponse;
+use App\Http\Resources\TransactionCollection;
+use App\Http\Resources\TransactionResource;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class TransactionController extends Controller
 {
-    public function list(Request $request, ListView $view): View|Application|Factory
+    public function getAll(Request $request, GetUserTransactionsAction $action): TransactionCollection
     {
-        return ($view)($request->user(), intval($request->query('page', 1)));
+        return new TransactionCollection(($action)(
+            $request->user(),
+            $request->query('page', 1),
+            $request->query('limit', 15),
+        ));
     }
 
-    public function add(Request $request, AddView $view): View|Application|Factory
+    public function getOne(Request $request, GetUserTransactionByIdAction $action, int $subscriptionId): TransactionResource
     {
-        return ($view)($request->user());
+        $transaction = ($action)($request->user(), $subscriptionId);
+        if (!$transaction) throw new NotFoundHttpException();
+
+        return new TransactionResource($transaction);
     }
 
-    public function store(StoreRequest $request, StoreTransactionAndUpdateAccountBalanceAction $action): RedirectResponse
+    public function store(StoreRequest $request, StoreTransactionAndUpdateAccountBalanceAction $action): TransactionResource
     {
-        ($action)($request->validated(), $request->user());
-        return redirect()->route('transactions');
+        return new TransactionResource(($action)($request->validated(), $request->user()));
     }
 }

@@ -3,12 +3,11 @@
 namespace App\Actions\Auth;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 readonly class AuthenticateUserAction
 {
-    public function __invoke(User $user, bool $remember = false): void
+    public function __invoke(User $user): string
     {
-        Auth::login($user, $remember);
+        return $user->createToken('Web Auth')->plainTextToken;
     }
 }

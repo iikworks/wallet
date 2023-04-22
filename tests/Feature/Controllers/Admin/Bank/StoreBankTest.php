@@ -6,7 +6,8 @@ use App\Models\Bank;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\Response;
+use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Request;
 use Tests\TestCase;
 
 class StoreBankTest extends TestCase
@@ -15,31 +16,49 @@ class StoreBankTest extends TestCase
 
     public function test_unauthorized_user_cant_store_a_new_bank(): void
     {
-        $response = $this->post(route('banks'));
+        $response = $this->json(Request::METHOD_POST, route('banks'));
 
-        $response->assertRedirectToRoute('login');
+        $response->assertUnauthorized();
     }
 
     public function test_not_admin_cant_store_a_new_bank(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('banks'));
+        $response = $this->json(Request::METHOD_POST, route('banks'));
 
-        $response->assertStatus(Response::HTTP_FORBIDDEN);
+        $response->assertForbidden();
     }
 
     public function test_admin_can_store_a_new_bank(): void
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('banks'), [
+        $response = $this->json(Request::METHOD_POST, route('banks'), [
             'title' => 'Bank',
         ]);
 
-        $response->assertRedirectToRoute('banks');
+        $response->assertCreated();
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'title',
+                'created_at',
+            ],
+        ]);
+        $response->assertJson([
+            'data' => [
+                'title' => 'Bank',
+            ],
+        ]);
 
         $this->assertEquals(1, Bank::query()->count());
 
@@ -50,40 +69,49 @@ class StoreBankTest extends TestCase
 
     public function test_title_field_required_to_store_a_new_bank()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('banks'), [
+        $response = $this->json(Request::METHOD_POST, route('banks'), [
 //            'title' => 'Bank',
         ]);
 
-        $response->assertSessionHasErrorsIn('title');
+        $response->assertJsonValidationErrorFor('title');
     }
 
     public function test_title_field_must_be_string_to_store_a_new_bank()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('banks'), [
+        $response = $this->json(Request::METHOD_POST, route('banks'), [
             'title' => 500,
         ]);
 
-        $response->assertSessionHasErrorsIn('title');
+        $response->assertJsonValidationErrorFor('title');
     }
 
     public function test_title_field_must_be_max_100_length_to_store_a_new_bank()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('banks'), [
+        $response = $this->json(Request::METHOD_POST, route('banks'), [
             'title' => Str::random(101),
         ]);
 
-        $response->assertSessionHasErrorsIn('title');
+        $response->assertJsonValidationErrorFor('title');
     }
 }

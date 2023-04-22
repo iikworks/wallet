@@ -4,29 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Actions\Accounts\StoreAccountAction;
 use App\Http\Requests\Accounts\StoreRequest;
-use App\View\Accounts\AddView;
-use App\View\Accounts\ListView;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\RedirectResponse;
+use App\Http\Resources\AccountCollection;
+use App\Http\Resources\AccountResource;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller
 {
-    public function list(Request $request, ListView $view): View|Application|Factory
+    public function getAll(Request $request): AccountCollection
     {
-        return ($view)($request->user(), intval($request->query('page', 1)));
+        return new AccountCollection(
+            $request->user()
+                ->accounts()
+                ->with('user')
+                ->paginate(
+                    perPage: $request->query('limit', 15),
+                    page: $request->query('page', 1),
+                )
+        );
     }
 
-    public function add(Request $request, AddView $view): View|Application|Factory
+    public function getOne(Request $request, int $accountId): AccountResource
     {
-        return ($view)($request->user(), $request->query('type'));
+        return new AccountResource(
+            $request->user()
+                ->accounts()
+                ->with('user')
+                ->where('id', $accountId)
+                ->firstOrFail()
+        );
     }
 
-    public function store(StoreRequest $request, StoreAccountAction $action): RedirectResponse
+    public function store(StoreRequest $request, StoreAccountAction $action): AccountResource
     {
-        ($action)($request->user()->id, $request->validated());
-        return redirect()->route('accounts');
+        return new AccountResource(($action)($request->user()->id, $request->validated()));
     }
 }

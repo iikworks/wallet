@@ -41,7 +41,7 @@ class Transaction extends Model
     protected $casts = [
         'type' => TransactionTypeCast::class,
         'amount' => AmountCast::class,
-        'date' => 'datetime:Y-m-d H:m:s'
+        'date' => 'datetime',
     ];
 
     public function account(): BelongsTo

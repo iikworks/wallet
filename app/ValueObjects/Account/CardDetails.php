@@ -2,6 +2,7 @@
 
 namespace App\ValueObjects\Account;
 
+use App\Http\Resources\BankResource;
 use App\Models\Account;
 use App\Models\Bank;
 use Carbon\Carbon;
@@ -24,6 +25,17 @@ final class CardDetails
         $this->expiresAt = $expiresAt;
         $this->system = $system;
         $this->bank = $bank;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'number' => hide_card_number($this->getNumber()),
+            'holder' => $this->getHolder(),
+            'expires_at' => $this->getExpiresAt()->format('m/y'),
+            'system' => $this->getSystem(),
+            'bank' => (new BankResource($this->getBank()))->resolve(),
+        ];
     }
 
     public function getNumber(): string

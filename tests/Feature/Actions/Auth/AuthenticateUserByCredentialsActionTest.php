@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Actions\Auth;
 
+use App\Actions\Auth\AuthenticateUserAction;
 use App\Actions\Auth\AuthenticateUserByCredentialsAction;
 use App\Actions\Users\FormatNumberFromIMaskAction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\UnauthorizedException;
+use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 
 class AuthenticateUserByCredentialsActionTest extends TestCase
@@ -22,7 +24,8 @@ class AuthenticateUserByCredentialsActionTest extends TestCase
         ]);
 
         (new AuthenticateUserByCredentialsAction(
-            new FormatNumberFromIMaskAction()
+            new FormatNumberFromIMaskAction(),
+            new AuthenticateUserAction(),
         ))([
             'phone' => 'wrong',
             'password' => 'password'
@@ -38,7 +41,8 @@ class AuthenticateUserByCredentialsActionTest extends TestCase
         ]);
 
         (new AuthenticateUserByCredentialsAction(
-            new FormatNumberFromIMaskAction()
+            new FormatNumberFromIMaskAction(),
+            new AuthenticateUserAction(),
         ))([
             'phone' => '+375 22 2342525',
             'password' => 'wrong'
@@ -52,12 +56,16 @@ class AuthenticateUserByCredentialsActionTest extends TestCase
         ]);
 
         (new AuthenticateUserByCredentialsAction(
-            new FormatNumberFromIMaskAction()
+            new FormatNumberFromIMaskAction(),
+            new AuthenticateUserAction(),
         ))([
             'phone' => '+375 22 2342525',
             'password' => 'password'
         ]);
 
-        $this->assertAuthenticatedAs($user);
+        $this->assertEquals(1, PersonalAccessToken::query()->count());
+        tap(PersonalAccessToken::query()->first(), function (PersonalAccessToken $personalAccessToken) use ($user) {
+            $this->assertEquals($user->id, $personalAccessToken->tokenable_id);
+        });
     }
 }

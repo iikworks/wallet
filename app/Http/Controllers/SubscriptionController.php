@@ -2,31 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Subscriptions\GetUserSubscriptionByIdAction;
+use App\Actions\Subscriptions\GetUserSubscriptionsAction;
 use App\Actions\Subscriptions\StoreSubscriptionAction;
 use App\Http\Requests\Subscriptions\StoreRequest;
-use App\View\Subscriptions\AddView;
-use App\View\Subscriptions\ListView;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\RedirectResponse;
+use App\Http\Resources\SubscriptionCollection;
+use App\Http\Resources\SubscriptionResource;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SubscriptionController extends Controller
 {
-    public function list(Request $request, ListView $view): View|Application|Factory
+    public function getAll(Request $request, GetUserSubscriptionsAction $action): SubscriptionCollection
     {
-        return ($view)($request->user(), intval($request->query('page', 1)));
+        return new SubscriptionCollection(($action)(
+            $request->user(),
+            $request->query('page', 1),
+            $request->query('limit', 15),
+        ));
     }
 
-    public function add(Request $request, AddView $view): View|Application|Factory
+    public function getOne(Request $request, GetUserSubscriptionByIdAction $action, int $subscriptionId): SubscriptionResource
     {
-        return ($view)($request->user());
+        $subscription = ($action)($request->user(), $subscriptionId);
+        if (!$subscription) throw new NotFoundHttpException();
+
+        return new SubscriptionResource($subscription);
     }
 
-    public function store(StoreRequest $request, StoreSubscriptionAction $action): RedirectResponse
+    public function store(StoreRequest $request, StoreSubscriptionAction $action): SubscriptionResource
     {
-        ($action)($request->validated(), $request->user());
-        return redirect()->route('subscriptions');
+        return new SubscriptionResource(($action)($request->validated(), $request->user()));
     }
 }

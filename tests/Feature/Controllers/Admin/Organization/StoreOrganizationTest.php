@@ -6,7 +6,8 @@ use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\Response;
+use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Request;
 use Tests\TestCase;
 
 class StoreOrganizationTest extends TestCase
@@ -15,33 +16,54 @@ class StoreOrganizationTest extends TestCase
 
     public function test_unauthorized_user_cant_store_a_new_organization(): void
     {
-        $response = $this->post(route('organizations'));
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'));
 
-        $response->assertRedirectToRoute('login');
+        $response->assertUnauthorized();
     }
 
     public function test_not_admin_cant_store_a_new_organization(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'));
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'));
 
-        $response->assertStatus(Response::HTTP_FORBIDDEN);
+        $response->assertForbidden();
     }
 
     public function test_admin_can_store_a_new_organization_without_parent(): void
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'parent_id' => 0,
             'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertRedirectToRoute('organizations');
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'title' => 'Organization',
+                'vulgar_title' => 'Vulgar Organization',
+            ],
+        ]);
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'title',
+                'vulgar_title',
+                'children',
+                'created_at',
+            ],
+        ]);
 
         $this->assertEquals(1, Organization::query()->count());
 
@@ -56,17 +78,35 @@ class StoreOrganizationTest extends TestCase
     {
         $existOrganization = Organization::factory()->create();
 
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'parent_id' => $existOrganization->id,
             'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertRedirectToRoute('organizations');
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'title' => 'Organization',
+                'vulgar_title' => 'Vulgar Organization',
+            ],
+        ]);
+        $response->assertJsonStructure([
+            'data' => [
+                'id',
+                'title',
+                'vulgar_title',
+                'children',
+                'created_at',
+            ],
+        ]);
 
         $this->assertEquals(2, Organization::query()->count());
 
@@ -81,104 +121,125 @@ class StoreOrganizationTest extends TestCase
     {
 //        $existOrganization = Organization::factory()->create();
 
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'parent_id' => "not numeric",
             'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertSessionHasErrorsIn('parent_id');
+        $response->assertJsonValidationErrorFor('parent_id');
     }
 
     public function test_parent_id_field_must_be_exist_to_store_a_new_organization()
     {
 //        $existOrganization = Organization::factory()->create();
 
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'parent_id' => 1,
             'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertSessionHasErrorsIn('parent_id');
+        $response->assertJsonValidationErrorFor('parent_id');
     }
 
     public function test_title_field_required_to_store_a_new_organization()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
 //            'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertSessionHasErrorsIn('title');
+        $response->assertJsonValidationErrorFor('title');
     }
 
     public function test_title_field_must_be_string_to_store_a_new_organization()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'title' => 500,
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertSessionHasErrorsIn('title');
+        $response->assertJsonValidationErrorFor('title');
     }
 
     public function test_title_field_must_be_max_100_length_to_store_a_new_organization()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'title' => Str::random(101),
             'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertSessionHasErrorsIn('title');
+        $response->assertJsonValidationErrorFor('title');
     }
 
     public function test_vulgar_title_field_required_to_store_a_new_organization()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'title' => 'Organization',
 //            'vulgar_title' => 'Vulgar Organization',
         ]);
 
-        $response->assertSessionHasErrorsIn('vulgar_title');
+        $response->assertJsonValidationErrorFor('vulgar_title');
     }
 
     public function test_vulgar_title_field_must_be_string_to_store_a_new_organization()
     {
-        $user = User::factory()->create([
-            'is_admin' => true,
-        ]);
+        Sanctum::actingAs(
+            User::factory()->create([
+                'is_admin' => true,
+            ]),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->json(Request::METHOD_POST, route('organizations.store'), [
             'title' => 'Organization',
             'vulgar_title' => 500,
         ]);
 
-        $response->assertSessionHasErrorsIn('vulgar_title');
+        $response->assertJsonValidationErrorFor('vulgar_title');
     }
 
     public function test_vulgar_title_field_must_be_max_100_length_to_store_a_new_organization()
@@ -187,7 +248,7 @@ class StoreOrganizationTest extends TestCase
             'is_admin' => true,
         ]);
 
-        $response = $this->actingAs($user)->post(route('organizations'), [
+        $response = $this->actingAs($user)->post(route('organizations.store'), [
             'title' => 'Organization',
             'vulgar_title' => Str::random(101),
         ]);

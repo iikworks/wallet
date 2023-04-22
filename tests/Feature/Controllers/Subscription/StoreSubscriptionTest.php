@@ -7,6 +7,8 @@ use App\Models\Organization;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Request;
 use Tests\TestCase;
 
 class StoreSubscriptionTest extends TestCase
@@ -15,25 +17,44 @@ class StoreSubscriptionTest extends TestCase
 
     public function test_unauthenticated_user_cant_store_a_new_subscription(): void
     {
-        $response = $this->post(route('subscriptions'));
-        $response->assertRedirectToRoute('login');
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'));
+        $response->assertUnauthorized();
         $this->assertEquals(0, Subscription::query()->count());
     }
 
     public function test_can_store_a_new_subscription(): void
     {
+        $this->seed();
+
         $account = Account::factory()->create();
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $account->user,
+            ['*']
+        );
 
-        $response = $this->actingAs($account->user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
             'amount' => 500,
             'day' => 5,
         ]);
-        $response->assertRedirectToRoute('subscriptions');
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'account' => [
+                    'id' => $account->id,
+                ],
+                'organization' => [
+                    'id' => $organization->id,
+                ],
+                'currency' => $currency,
+                'amount' => 500,
+                'day' => 5,
+            ],
+        ]);
 
         $this->assertEquals(1, Subscription::query()->count());
         tap(Subscription::query()->first(), function (Subscription $subscription) use ($account, $organization, $currency) {
@@ -54,8 +75,12 @@ class StoreSubscriptionTest extends TestCase
 //        ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
 //            'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => $currency,
@@ -63,7 +88,7 @@ class StoreSubscriptionTest extends TestCase
             'date' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('account_id');
+        $response->assertJsonValidationErrorFor('account_id');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -77,8 +102,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -86,7 +115,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('account_id');
+        $response->assertJsonValidationErrorFor('account_id');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -99,8 +128,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
 //        $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
 //            'organization_id' => $organization->id,
             'currency' => $currency,
@@ -108,7 +141,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('organization_id');
+        $response->assertJsonValidationErrorFor('organization_id');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -121,8 +154,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
 //        $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        $response = $this->json(Request::METHOD_POST, route('transactions'), [
             'account_id' => $account->id,
             'organization_id' => 500,
             'currency' => $currency,
@@ -130,7 +167,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('organization_id');
+        $response->assertJsonValidationErrorFor('organization_id');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -143,8 +180,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -152,7 +193,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('amount');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -165,8 +206,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
 //        $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
 //            'currency' => $currency,
@@ -174,7 +219,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('currency');
+        $response->assertJsonValidationErrorFor('currency');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -187,8 +232,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
 //        $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => 'bad',
@@ -196,7 +245,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('currency');
+        $response->assertJsonValidationErrorFor('currency');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -209,8 +258,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -218,7 +271,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('amount');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -231,8 +284,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -240,7 +297,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('amount');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -253,8 +310,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -262,7 +323,7 @@ class StoreSubscriptionTest extends TestCase
 //            'day' => 5,
         ]);
 
-        $response->assertSessionHasErrorsIn('day');
+        $response->assertJsonValidationErrorFor('day');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -275,8 +336,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -284,7 +349,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 'not numeric',
         ]);
 
-        $response->assertSessionHasErrorsIn('day');
+        $response->assertJsonValidationErrorFor('day');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -297,8 +362,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -306,7 +375,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 0,
         ]);
 
-        $response->assertSessionHasErrorsIn('day');
+        $response->assertJsonValidationErrorFor('day');
         $this->assertEquals(0, Subscription::query()->count());
     }
 
@@ -319,8 +388,12 @@ class StoreSubscriptionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
         $currency = array_key_first(config('constants.currencies'));
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('subscriptions'), [
+        $response = $this->json(Request::METHOD_POST, route('subscriptions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'currency' => $currency,
@@ -328,7 +401,7 @@ class StoreSubscriptionTest extends TestCase
             'day' => 32,
         ]);
 
-        $response->assertSessionHasErrorsIn('day');
+        $response->assertJsonValidationErrorFor('day');
         $this->assertEquals(0, Subscription::query()->count());
     }
 }

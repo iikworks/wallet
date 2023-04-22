@@ -8,56 +8,45 @@ use App\Actions\Banks\UpdateBankAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Banks\StoreRequest;
 use App\Http\Requests\Banks\UpdateRequest;
-use App\View\Banks\AddView;
-use App\View\Banks\DeleteView;
-use App\View\Banks\EditView;
-use App\View\Banks\ListView;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\RedirectResponse;
+use App\Http\Resources\BankCollection;
+use App\Http\Resources\BankResource;
+use App\Models\Bank;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class BankController extends Controller
 {
-    public function list(Request $request, ListView $view): View|Application|Factory
+    public function getAll(Request $request): BankCollection
     {
-        return ($view)($request->user(), intval($request->query('page', 1)));
+        return new BankCollection(Bank::query()
+            ->latest('created_at')
+            ->paginate(
+                perPage: $request->query('limit', 50),
+                page: $request->query('page', 1),
+            ));
     }
 
-    public function add(AddView $view): View|Application|Factory
+    public function getOne(int $bankId): BankResource
     {
-        return ($view)();
+        return new BankResource(Bank::query()->findOrFail($bankId));
     }
 
-    public function store(StoreRequest $request, StoreBankAction $action): RedirectResponse
+    public function store(StoreRequest $request, StoreBankAction $action): BankResource
     {
-        ($action)($request->validated());
-
-        return redirect()->route('banks');
+        return new BankResource(($action)($request->validated()));
     }
 
-    public function edit(EditView $view, string $organizationId): View|Application|Factory
+    public function update(UpdateRequest $request, UpdateBankAction $action, int $bankId): BankResource
     {
-        return ($view)(intval($organizationId));
+        return new BankResource(($action)($bankId, $request->validated()));
     }
 
-    public function update(UpdateRequest $request, UpdateBankAction $action, string $organizationId): RedirectResponse
+    public function destroy(DestroyBankAction $action, int $bankId): JsonResponse
     {
-        ($action)(intval($organizationId), $request->validated());
+        ($action)($bankId);
 
-        return back();
-    }
-
-    public function delete(string $organizationId, DeleteView $view): View|Application|Factory
-    {
-        return ($view)(intval($organizationId));
-    }
-
-    public function destroy(DestroyBankAction $action, string $organizationId): RedirectResponse
-    {
-        ($action)(intval($organizationId));
-
-        return redirect()->route('banks');
+        return response()->json([
+            'status' => 'ok',
+        ]);
     }
 }

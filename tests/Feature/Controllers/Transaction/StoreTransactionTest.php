@@ -8,6 +8,8 @@ use App\Models\Transaction;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Request;
 use Tests\TestCase;
 
 class StoreTransactionTest extends TestCase
@@ -16,13 +18,14 @@ class StoreTransactionTest extends TestCase
 
     public function test_unauthenticated_user_cant_store_a_new_transaction(): void
     {
-        $response = $this->post(route('transactions'));
-        $response->assertRedirectToRoute('login');
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'));
+        $response->assertUnauthorized();
         $this->assertEquals(0, Transaction::query()->count());
     }
 
     public function test_can_store_a_new_expense_transaction(): void
     {
+        $this->seed();
         $user = User::factory()->create();
         $account = Account::factory()->create([
             'balance' => 500000,
@@ -31,14 +34,33 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::EXPENSE_TYPE,
             'amount' => 500,
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
-        $response->assertRedirectToRoute('transactions');
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'account' => [
+                    'id' => $account->id,
+                    'balance' => 4500,
+                ],
+                'organization' => [
+                    'id' => $organization->id,
+                ],
+                'type' => Transaction::EXPENSE_TYPE,
+                'amount' => 500,
+                'date' => $date->setSecond(0)->toISOString(),
+            ],
+        ]);
 
         $this->assertEquals(1, Transaction::query()->count());
         tap(Transaction::query()->first(), function (Transaction $transaction) use ($account, $organization, $date) {
@@ -56,6 +78,7 @@ class StoreTransactionTest extends TestCase
 
     public function test_can_store_a_new_replenishment_transaction(): void
     {
+        $this->seed();
         $user = User::factory()->create();
         $account = Account::factory()->create([
             'balance' => 500000,
@@ -64,14 +87,34 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
             'amount' => 500,
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
-        $response->assertRedirectToRoute('transactions');
+
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'account' => [
+                    'id' => $account->id,
+                    'balance' => 5500,
+                ],
+                'organization' => [
+                    'id' => $organization->id,
+                ],
+                'type' => Transaction::REPLENISHMENT_TYPE,
+                'amount' => 500,
+                'date' => $date->setSecond(0)->toISOString(),
+            ],
+        ]);
 
         $this->assertEquals(1, Transaction::query()->count());
         tap(Transaction::query()->first(), function (Transaction $transaction) use ($account, $organization, $date) {
@@ -97,7 +140,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
 //            'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -105,7 +153,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('account_id');
+        $response->assertJsonValidationErrorFor('account_id');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -120,7 +168,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -128,7 +181,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('account_id');
+        $response->assertJsonValidationErrorFor('account_id');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -142,7 +195,12 @@ class StoreTransactionTest extends TestCase
 //        $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
 //            'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -150,7 +208,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('organization_id');
+        $response->assertJsonValidationErrorFor('organization_id');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -164,7 +222,12 @@ class StoreTransactionTest extends TestCase
 //        $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => 500,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -172,7 +235,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('organization_id');
+        $response->assertJsonValidationErrorFor('organization_id');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -186,7 +249,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -194,7 +262,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('amount');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -208,7 +276,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -216,7 +289,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('amount');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -230,7 +303,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -238,7 +316,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('amount');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -252,7 +330,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
 //            'type' => Transaction::REPLENISHMENT_TYPE,
@@ -260,7 +343,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('type');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -274,7 +357,12 @@ class StoreTransactionTest extends TestCase
         $organization = Organization::factory()->create();
         $date = Carbon::make(fake()->dateTimeBetween('-3 months'));
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => 'invalid',
@@ -282,7 +370,7 @@ class StoreTransactionTest extends TestCase
             'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('type');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -295,7 +383,12 @@ class StoreTransactionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -303,7 +396,7 @@ class StoreTransactionTest extends TestCase
 //            'date' => $date->format('Y-m-d\TH:i'),
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('date');
         $this->assertEquals(0, Transaction::query()->count());
     }
 
@@ -316,7 +409,12 @@ class StoreTransactionTest extends TestCase
         ]);
         $organization = Organization::factory()->create();
 
-        $response = $this->actingAs($user)->post(route('transactions'), [
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
+        $response = $this->json(Request::METHOD_POST, route('transactions.store'), [
             'account_id' => $account->id,
             'organization_id' => $organization->id,
             'type' => Transaction::REPLENISHMENT_TYPE,
@@ -324,7 +422,7 @@ class StoreTransactionTest extends TestCase
             'date' => 'invalid',
         ]);
 
-        $response->assertSessionHasErrorsIn('amount');
+        $response->assertJsonValidationErrorFor('date');
         $this->assertEquals(0, Transaction::query()->count());
     }
 }

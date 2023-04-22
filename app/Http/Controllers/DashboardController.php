@@ -2,16 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\View\DashboardView;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
+use App\Actions\Dashboard\DashboardAction;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function dashboard(Request $request, DashboardView $view): View|Application|Factory
+    public function dashboard(Request $request, DashboardAction $action): JsonResponse
     {
-        return ($view)($request->user());
+        return ($action)($request->user());
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Actions\Users;
 
 use App\Actions\Auth\AuthenticateUserAction;
-use App\Models\User;
 
 readonly class StoreUserAndAuthenticateAction
 {
@@ -15,11 +14,12 @@ readonly class StoreUserAndAuthenticateAction
 
     }
 
-    public function __invoke(array $data, bool $remember = false): User
+    public function __invoke(array $data): array
     {
         $user = ($this->storeUser)($data);
-        ($this->authenticateUser)($user, $remember);
-
-        return $user;
+        return [
+            'access_token' => ($this->authenticateUser)($user),
+            'user' => $user,
+        ];
     }
 }

@@ -15,6 +15,8 @@ class RegisterControllerTest extends TestCase
 
     public function test_can_register(): void
     {
+        $this->seed();
+        
         $response = $this->json(Request::METHOD_POST, route('register'), [
             'phone' => '+375 22 2342525',
             'first_name' => 'Tester',
@@ -23,8 +25,19 @@ class RegisterControllerTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertRedirectToRoute('dashboard');
-        $this->assertAuthenticated();
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'access_token',
+            'user',
+        ]);
+        $response->assertJson([
+            'user' => [
+                'first_name' => 'Tester',
+                'last_name' => 'Testerov',
+                'phone' => '+375222342525',
+                'is_admin' => false,
+            ],
+        ]);
 
         $this->assertEquals(1, User::query()->count());
         tap(User::query()->first(), function (User $user) {
@@ -46,7 +59,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('phone');
-        $this->assertGuest();
     }
 
     public function test_phone_field_must_be_in_right_format_to_register()
@@ -60,7 +72,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('phone');
-        $this->assertGuest();
     }
 
     public function test_phone_field_must_be_unique_to_register()
@@ -77,8 +88,7 @@ class RegisterControllerTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertSessionHasErrorsIn('phone');
-        $this->assertGuest();
+        $response->assertJsonValidationErrorFor('phone');
     }
 
     public function test_first_name_field_required_to_register(): void
@@ -92,7 +102,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('first_name');
-        $this->assertGuest();
     }
 
     public function test_first_name_must_be_min_2_length_to_register(): void
@@ -106,7 +115,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('first_name');
-        $this->assertGuest();
     }
 
     public function test_first_name_must_be_max_30_length_to_register(): void
@@ -120,7 +128,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('first_name');
-        $this->assertGuest();
     }
 
     public function test_first_name_must_be_alpha_to_register(): void
@@ -134,7 +141,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('first_name');
-        $this->assertGuest();
     }
 
     public function test_last_name_field_required_to_register(): void
@@ -148,7 +154,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('last_name');
-        $this->assertGuest();
     }
 
     public function test_last_name_must_be_min_2_length_to_register(): void
@@ -162,7 +167,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('last_name');
-        $this->assertGuest();
     }
 
     public function test_last_name_must_be_max_30_length_to_register(): void
@@ -176,7 +180,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('last_name');
-        $this->assertGuest();
     }
 
     public function test_last_name_must_be_alpha_to_register(): void
@@ -190,7 +193,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('last_name');
-        $this->assertGuest();
     }
 
     public function test_password_field_required_to_register()
@@ -204,7 +206,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('password');
-        $this->assertGuest();
     }
 
     public function test_password_field_must_be_min_6_length_to_register()
@@ -218,7 +219,6 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('password');
-        $this->assertGuest();
     }
 
     public function test_password_field_must_be_confirmed_to_register()
@@ -232,6 +232,5 @@ class RegisterControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('password');
-        $this->assertGuest();
     }
 }

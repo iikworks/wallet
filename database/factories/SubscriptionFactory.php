@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Account;
 use App\Models\Organization;
 use App\Models\Subscription;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Arr;
 
@@ -23,7 +22,6 @@ class SubscriptionFactory extends Factory
     {
         return [
             'account_id' => Account::query()
-                ->where('type', Account::CARD_TYPE)
                 ->get()
                 ->random()
                 ->id,

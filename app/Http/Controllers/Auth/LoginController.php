@@ -5,28 +5,28 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\Auth\AuthenticateUserByCredentialsAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Contracts\View\Factory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Application;
-use Illuminate\Http\RedirectResponse;
+use App\Http\Resources\UserResource;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\UnauthorizedException;
+use Symfony\Component\HttpFoundation\Response;
 
 class LoginController extends Controller
 {
-    public function form(): View|Application|Factory
-    {
-        return view('auth.login', [
-            'title' => __('auth.login'),
-        ]);
-    }
-
-    public function login(LoginRequest $request, AuthenticateUserByCredentialsAction $authenticateUserAction): RedirectResponse
+    public function login(LoginRequest $request, AuthenticateUserByCredentialsAction $authenticateUserAction): JsonResponse
     {
         try {
-            ($authenticateUserAction)($request->validated(), true);
-            return redirect()->route('dashboard');
+            $result = ($authenticateUserAction)($request->validated());
+            return response()->json([
+                'access_token' => $result['access_token'],
+                'user' => new UserResource($result['user']),
+            ]);
         } catch (UnauthorizedException) {
-            return back()->withErrors(['phone' => __('auth.failed')]);
+            return response()->json([
+                'message' => __('auth.failed'),
+                'errors' => [
+                    'phone' => __('auth.failed')
+                ],
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 }

@@ -13,6 +13,8 @@ class LoginControllerTest extends TestCase
 
     public function test_can_authenticate(): void
     {
+        $this->seed();
+        
         $user = User::factory()->create([
             'phone' => '+375222342525',
         ]);
@@ -22,8 +24,21 @@ class LoginControllerTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertRedirectToRoute('dashboard');
-        $this->assertAuthenticatedAs($user);
+        $response->assertOk();
+        $response->assertJsonStructure([
+            'access_token',
+            'user',
+        ]);
+        $response->assertJson([
+            'user' => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'phone' => $user->phone,
+                'is_admin' => false,
+                'created_at' => $user->created_at->toIsoString(),
+            ],
+        ]);
     }
 
     public function test_phone_field_required_to_authorize()
@@ -33,7 +48,6 @@ class LoginControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('phone');
-        $this->assertGuest();
     }
 
     public function test_phone_field_must_be_in_right_format_to_authorize()
@@ -43,7 +57,6 @@ class LoginControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('phone');
-        $this->assertGuest();
     }
 
     public function test_password_field_required_to_authorize()
@@ -53,7 +66,6 @@ class LoginControllerTest extends TestCase
         ]);
 
         $response->assertJsonValidationErrorFor('password');
-        $this->assertGuest();
     }
 
     public function test_cant_authorize_with_wrong_phone()
@@ -67,8 +79,7 @@ class LoginControllerTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertSessionHasErrorsIn('phone');
-        $this->assertGuest();
+        $response->assertJsonValidationErrorFor('phone');
     }
 
     public function test_cant_authorize_with_wrong_password()
@@ -82,7 +93,6 @@ class LoginControllerTest extends TestCase
             'password' => 'wrong',
         ]);
 
-        $response->assertSessionHasErrorsIn('phone');
-        $this->assertGuest();
+        $response->assertJsonValidationErrorFor('phone');
     }
 }

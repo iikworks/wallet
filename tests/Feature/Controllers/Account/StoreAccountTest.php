@@ -7,6 +7,8 @@ use App\Models\Bank;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Request;
 use Tests\TestCase;
 
 class StoreAccountTest extends TestCase
@@ -15,22 +17,43 @@ class StoreAccountTest extends TestCase
 
     public function test_unauthenticated_user_cant_store_a_new_account(): void
     {
-        $response = $this->post(route('accounts'));
-        $response->assertRedirectToRoute('login');
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'));
+        $response->assertUnauthorized();
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_can_store_a_new_cash_account(): void
     {
+        $this->seed();
+
         $user = User::factory()->create();
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CASH_TYPE,
         ]);
-        $response->assertRedirectToRoute('accounts');
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'phone' => $user->phone,
+                    'is_admin' => false,
+                    'created_at' => $user->created_at->toIsoString(),
+                ],
+                'balance' => 5000,
+                'currency' => 'BYN',
+                'details' => null,
+            ],
+        ]);
 
 
         $this->assertEquals(1, Account::query()->count());
@@ -43,39 +66,76 @@ class StoreAccountTest extends TestCase
 
     public function test_can_store_a_new_bank_account(): void
     {
+        $this->seed();
+
         $user = User::factory()->create();
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::BANK_ACCOUNT_TYPE,
             'details' => [
-                'account_number' => 'NUMBER',
+                'account_number' => 'NUMBERNUMBERNUMBER',
                 'bank_id' => $bank->id,
             ],
         ]);
-        $response->assertRedirectToRoute('accounts');
+
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'phone' => $user->phone,
+                    'is_admin' => false,
+                    'created_at' => $user->created_at->toIsoString(),
+                ],
+                'balance' => 5000,
+                'currency' => 'BYN',
+                'details' => [
+                    'number' => 'NUMBER***MBER',
+                    'bank' => [
+                        'id' => $bank->id,
+                        'title' => $bank->title,
+                        'created_at' => $bank->created_at->toIsoString(),
+                    ],
+                ],
+            ],
+        ]);
 
         $this->assertEquals(1, Account::query()->count());
         tap(Account::query()->first(), function (Account $account) use ($user, $currency, $bank) {
             $this->assertEquals($user->id, $account->user_id);
             $this->assertEquals(500000, $account->balance);
             $this->assertEquals($currency, $account->currency);
-            $this->assertEquals('NUMBER', $account->details->getNumber());
+            $this->assertEquals('NUMBERNUMBERNUMBER', $account->details->getNumber());
             $this->assertEquals($bank->id, $account->details->getBank()->id);
         });
     }
 
     public function test_can_store_a_new_card_account(): void
     {
+        $this->seed();
+        
         $user = User::factory()->create();
+        Sanctum::actingAs(
+            $user,
+            ['*']
+        );
+
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
         $system = Account::SYSTEMS[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -87,7 +147,33 @@ class StoreAccountTest extends TestCase
                 'bank_id' => $bank->id,
             ],
         ]);
-        $response->assertRedirectToRoute('accounts');
+
+        $response->assertCreated();
+        $response->assertJson([
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'phone' => $user->phone,
+                    'is_admin' => false,
+                    'created_at' => $user->created_at->toIsoString(),
+                ],
+                'balance' => 5000,
+                'currency' => 'BYN',
+                'details' => [
+                    'number' => '3534 3***453',
+                    'holder' => 'CARD HOLDER',
+                    'expires_at' => '08/27',
+                    'system' => $system,
+                    'bank' => [
+                        'id' => $bank->id,
+                        'title' => $bank->title,
+                        'created_at' => $bank->created_at->toIsoString(),
+                    ],
+                ],
+            ],
+        ]);
 
         $this->assertEquals(1, Account::query()->count());
         tap(Account::query()->first(), function (Account $account) use ($user, $currency, $bank, $system) {
@@ -107,114 +193,138 @@ class StoreAccountTest extends TestCase
 
     public function test_balance_field_required_to_create_a_new_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
 //            'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CASH_TYPE,
         ]);
 
-        $response->assertSessionHasErrorsIn('balance');
+        $response->assertJsonValidationErrorFor('balance');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_balance_field_must_be_a_number(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 'string',
             'currency' => $currency,
             'type' => Account::CASH_TYPE,
         ]);
 
-        $response->assertSessionHasErrorsIn('balance');
+        $response->assertJsonValidationErrorFor('balance');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_balance_field_must_be_a_bigger_than_zero(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => -10,
             'currency' => $currency,
             'type' => Account::CASH_TYPE,
         ]);
 
-        $response->assertSessionHasErrorsIn('balance');
+        $response->assertJsonValidationErrorFor('balance');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_currency_field_required_to_create_a_new_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
 //            'currency' => $currency,
             'type' => Account::CASH_TYPE,
         ]);
 
-        $response->assertSessionHasErrorsIn('balance');
+        $response->assertJsonValidationErrorFor('currency');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_currency_field_must_be_available(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => 'wrong',
             'type' => Account::CASH_TYPE,
         ]);
 
-        $response->assertSessionHasErrorsIn('currency');
+        $response->assertJsonValidationErrorFor('currency');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_type_field_required_to_create_a_new_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
 //            'type' => Account::CASH_TYPE,
         ]);
 
-        $response->assertSessionHasErrorsIn('balance');
+        $response->assertJsonValidationErrorFor('type');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_type_field_must_be_available(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => 'wrong',
         ]);
 
-        $response->assertSessionHasErrorsIn('currency');
+        $response->assertJsonValidationErrorFor('type');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_number_field_required_to_create_a_new_bank_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::BANK_ACCOUNT_TYPE,
@@ -224,16 +334,19 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_bank_id_field_required_to_create_a_new_bank_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::BANK_ACCOUNT_TYPE,
@@ -243,16 +356,19 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_bank_id_must_be_exist_to_create_a_new_bank_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::BANK_ACCOUNT_TYPE,
@@ -262,17 +378,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_number_field_required_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -285,17 +404,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_number_field_must_be_valid_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -308,17 +430,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_holder_field_required_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -331,17 +456,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_holder_must_be_uppercase_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -354,17 +482,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_expires_at_field_required_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -377,17 +508,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_expires_at_field_must_be_valid_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -400,17 +534,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_system_field_required_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -423,17 +560,20 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_system_field_must_be_valid_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $bank = Bank::factory()->create();
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -446,16 +586,19 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_bank_id_field_required_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -468,16 +611,19 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 
     public function test_details_bank_id_must_be_exist_to_create_a_new_card_account(): void
     {
-        $user = User::factory()->create();
+        Sanctum::actingAs(
+            User::factory()->create(),
+            ['*']
+        );
         $currency = array_keys(config('constants.currencies'))[0];
 
-        $response = $this->actingAs($user)->post(route('accounts'), [
+        $response = $this->json(Request::METHOD_POST, route('accounts.store'), [
             'balance' => 5000,
             'currency' => $currency,
             'type' => Account::CARD_TYPE,
@@ -490,7 +636,7 @@ class StoreAccountTest extends TestCase
             ],
         ]);
 
-        $response->assertSessionHasErrorsIn('details');
+        $response->assertJsonValidationErrorFor('details');
         $this->assertEquals(0, Account::query()->count());
     }
 }
