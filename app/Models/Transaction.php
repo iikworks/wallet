@@ -5,9 +5,11 @@ namespace App\Models;
 use App\Casts\AmountCast;
 use App\Casts\TransactionTypeCast;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -18,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $date
  * @property Account $account
  * @property Organization $organization
+ * @method static Builder|Transaction|Collection|null query()
  */
 class Transaction extends Model
 {

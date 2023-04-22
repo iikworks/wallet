@@ -12,28 +12,20 @@ readonly class ConvertToSelectAction
         $accountsForSelect = collect();
 
         foreach ($accounts as $account) {
-            switch ($account->type) {
-                case Account::CASH_TYPE:
-                    $title = __('accounts.types.' . str_replace(' ', '_', $account->type));
-                    break;
-                case Account::BANK_ACCOUNT_TYPE:
-                    $title = sprintf(
-                        '%s %s',
-                        __('accounts.types.' . str_replace(' ', '_', $account->type)),
-                        hide_bank_account_number($account->details->getNumber()),
-                    );
-                    break;
-                case Account::CARD_TYPE:
-                    $title = sprintf(
-                        '%s %s',
-                        __('accounts.types.' . str_replace(' ', '_', $account->type)),
-                        hide_card_number($account->details->getNumber()),
-                    );
-                    break;
-                default:
-                    $title = '';
-                    break;
-            }
+            $title = match ($account->type) {
+                Account::CASH_TYPE => __('accounts.types.' . str_replace(' ', '_', $account->type)),
+                Account::BANK_ACCOUNT_TYPE => sprintf(
+                    '%s %s',
+                    __('accounts.types.' . str_replace(' ', '_', $account->type)),
+                    hide_bank_account_number($account->details->getNumber()),
+                ),
+                Account::CARD_TYPE => sprintf(
+                    '%s %s',
+                    __('accounts.types.' . str_replace(' ', '_', $account->type)),
+                    hide_card_number($account->details->getNumber()),
+                ),
+                default => '',
+            };
 
             $accountsForSelect[$account->id] = [
                 'title' => $title,

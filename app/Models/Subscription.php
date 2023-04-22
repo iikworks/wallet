@@ -6,9 +6,11 @@ use App\Casts\AmountCast;
 use App\Casts\CurrencyCast;
 use App\Casts\SubscriptionDayCast;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Collection;
 
 /**
  * @property int $id
@@ -17,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $amount
  * @property string $currency
  * @property int $day
+ * @method static Builder|Subscription|Collection|null query()
  */
 class Subscription extends Model
 {

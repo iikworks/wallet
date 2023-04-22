@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -17,6 +18,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property boolean $is_admin
  * @property string $password
  * @property Collection $accounts
+ * @method static Builder|User|Collection|null query()
  */
 class User extends Authenticatable
 {
