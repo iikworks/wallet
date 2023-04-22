@@ -10,7 +10,7 @@ readonly class UpdateOrganizationAction
 {
     public function __invoke(int $organizationId, array $data): Organization
     {
-        if (isset($data['parent_id']) && $data['parent_id'] != 0) {
+        if (isset($data['parent_id'])) {
             if (!Organization::query()->find($data['parent_id']))
                 throw new ModelNotFoundException("parent id not found");
         } else $data['parent_id'] = null;

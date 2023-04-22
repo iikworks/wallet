@@ -40,7 +40,6 @@ class UpdateOrganizationActionTest extends TestCase
         $organization = Organization::factory()->create();
 
         (new UpdateOrganizationAction)($organization->id, [
-            'parent_id' => 0,
             'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);

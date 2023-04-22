@@ -69,7 +69,6 @@ class UpdateOrganizationTest extends TestCase
         $response = $this->json(Request::METHOD_PATCH, route('organizations.update', [
             'id' => $organization->id,
         ]), [
-            'parent_id' => 0,
             'title' => 'Organization',
             'vulgar_title' => 'Vulgar Organization',
         ]);
