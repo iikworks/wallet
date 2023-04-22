@@ -6,6 +6,7 @@ use App\Casts\AmountCast;
 use App\Casts\CurrencyCast;
 use App\Casts\SubscriptionDayCast;
 use Carbon\Carbon;
+use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 
 /**
+ * App\Models\Subscription
+ *
  * @property int $id
  * @property int $account_id
  * @property int $organization_id
@@ -20,6 +23,21 @@ use Illuminate\Support\Collection;
  * @property string $currency
  * @property int $day
  * @method static Builder|Subscription|Collection|null query()
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Account $account
+ * @property-read Organization $organization
+ * @method static SubscriptionFactory factory($count = null, $state = [])
+ * @method static Builder|Subscription newModelQuery()
+ * @method static Builder|Subscription newQuery()
+ * @method static Builder|Subscription whereAccountId($value)
+ * @method static Builder|Subscription whereAmount($value)
+ * @method static Builder|Subscription whereCreatedAt($value)
+ * @method static Builder|Subscription whereCurrency($value)
+ * @method static Builder|Subscription whereDay($value)
+ * @method static Builder|Subscription whereId($value)
+ * @method static Builder|Subscription whereOrganizationId($value)
+ * @method static Builder|Subscription whereUpdatedAt($value)
  */
 class Subscription extends Model
 {

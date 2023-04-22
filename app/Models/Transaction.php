@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\AmountCast;
 use App\Casts\TransactionTypeCast;
 use Carbon\Carbon;
+use Database\Factories\TransactionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 
 /**
+ * App\Models\Transaction
+ *
  * @property int $id
  * @property int $account_id
  * @property int $organization_id
@@ -21,6 +24,19 @@ use Illuminate\Support\Collection;
  * @property Account $account
  * @property Organization $organization
  * @method static Builder|Transaction|Collection|null query()
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static TransactionFactory factory($count = null, $state = [])
+ * @method static Builder|Transaction newModelQuery()
+ * @method static Builder|Transaction newQuery()
+ * @method static Builder|Transaction whereAccountId($value)
+ * @method static Builder|Transaction whereAmount($value)
+ * @method static Builder|Transaction whereCreatedAt($value)
+ * @method static Builder|Transaction whereDate($value)
+ * @method static Builder|Transaction whereId($value)
+ * @method static Builder|Transaction whereOrganizationId($value)
+ * @method static Builder|Transaction whereType($value)
+ * @method static Builder|Transaction whereUpdatedAt($value)
  */
 class Transaction extends Model
 {
