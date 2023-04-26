@@ -29,6 +29,7 @@ class UserResource extends JsonResource
             'phone' => $this->phone,
             'is_admin' => $this->is_admin,
             'balance' => $balance,
+            'currency' => config('app.currency'),
             'created_at' => $this->created_at->toIsoString(),
         ];
     }
