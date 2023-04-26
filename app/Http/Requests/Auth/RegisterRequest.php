@@ -26,7 +26,7 @@ class RegisterRequest extends FormRequest
             'phone' => 'required|string|regex:/^\+[0-9]{3} [0-9]{2} [0-9]{7}$/',
             'first_name' => 'required|min:2|max:30|alpha',
             'last_name' => 'required|min:2|max:30|alpha',
-            'password' => 'required|confirmed|min:6',
+            'password' => 'required|min:6',
         ];
     }
 }
