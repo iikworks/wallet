@@ -32,32 +32,34 @@ readonly class DashboardAction
         $now = now();
 
         return response()->json([
-            'has_other_currencies' => $this->hasOtherCurrencies($accounts, $currency),
-            'accounts' => [
-                'list' => new AccountCollection($accounts->take(3)),
-                'count' => $accounts->count(),
-            ],
-            'transactions' => [
-                'latest' => new TransactionCollection($latestTransactions),
-                'latest_first' => $latestTransactions->first() ? new TransactionResource($latestTransactions->first()) : null,
-                'count' => $this->getTransactionsCount($accountsIds),
-                'sum_expenses_at_this_month' => normalize_number($this->getTransactionsSumAtThisMonth(
-                    $accounts,
-                    $currency,
-                    $now,
-                    Transaction::EXPENSE_TYPE,
-                )),
-                'sum_replenishments_at_this_month' => normalize_number($this->getTransactionsSumAtThisMonth(
-                    $accounts,
-                    $currency,
-                    $now,
-                    Transaction::REPLENISHMENT_TYPE
-                )),
-            ],
-            'subscriptions' => [
-                'list' => new SubscriptionCollection($this->filterSubscriptions($this->getSubscriptions($accountsIds), $now)),
-                'count' => $this->getSubscriptionsCount($accountsIds),
-            ],
+            'data' => [
+                'has_other_currencies' => $this->hasOtherCurrencies($accounts, $currency),
+                'accounts' => [
+                    'list' => new AccountCollection($accounts->take(3)),
+                    'count' => $accounts->count(),
+                ],
+                'transactions' => [
+                    'latest' => new TransactionCollection($latestTransactions),
+                    'latest_first' => $latestTransactions->first() ? new TransactionResource($latestTransactions->first()) : null,
+                    'count' => $this->getTransactionsCount($accountsIds),
+                    'sum_expenses_at_this_month' => normalize_number($this->getTransactionsSumAtThisMonth(
+                        $accounts,
+                        $currency,
+                        $now,
+                        Transaction::EXPENSE_TYPE,
+                    )),
+                    'sum_replenishments_at_this_month' => normalize_number($this->getTransactionsSumAtThisMonth(
+                        $accounts,
+                        $currency,
+                        $now,
+                        Transaction::REPLENISHMENT_TYPE
+                    )),
+                ],
+                'subscriptions' => [
+                    'list' => new SubscriptionCollection($this->filterSubscriptions($this->getSubscriptions($accountsIds), $now)),
+                    'count' => $this->getSubscriptionsCount($accountsIds),
+                ],
+            ]
         ]);
     }
 
