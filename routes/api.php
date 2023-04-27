@@ -29,7 +29,7 @@ Route::prefix('/auth')->group(function () {
     Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'user'])->name('user');
 });
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('accounts')->group(function () {
