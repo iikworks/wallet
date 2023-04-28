@@ -12,12 +12,10 @@ class AccountController extends Controller
 {
     public function getAll(Request $request): AccountCollection
     {
-        return new AccountCollection([
-            'data' => $request->user()
-                ->accounts()
-                ->with('user')
-                ->get()
-        ]);
+        return new AccountCollection($request->user()
+            ->accounts()
+            ->with('user')
+            ->get());
     }
 
     public function get(Request $request): AccountCollection

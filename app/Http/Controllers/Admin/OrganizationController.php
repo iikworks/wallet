@@ -20,13 +20,11 @@ class OrganizationController extends Controller
 {
     public function getAll(): OrganizationCollection
     {
-        return new OrganizationCollection([
-            'data' => Organization::query()
-                ->latest('created_at')
-                ->whereNull('parent_id')
-                ->with('childrenRecursive')
-                ->get()
-        ]);
+        return new OrganizationCollection(Organization::query()
+            ->latest('created_at')
+            ->whereNull('parent_id')
+            ->with('childrenRecursive')
+            ->get());
     }
 
     public function get(Request $request): OrganizationCollection
