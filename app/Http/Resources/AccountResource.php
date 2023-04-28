@@ -21,6 +21,7 @@ class AccountResource extends JsonResource
             'user' => new UserResource($this->user),
             'currency' => $this->currency,
             'balance' => normalize_number($this->balance),
+            'type' => $this->type,
             'details' => $details != null ? $details->toArray() : null,
             'created_at' => $this->created_at->toIsoString(),
         ];

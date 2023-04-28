@@ -21,6 +21,7 @@ class SubscriptionResource extends JsonResource
             'amount' => normalize_number($this->amount),
             'currency' => $this->currency,
             'day' => $this->day,
+            'next_payment_in' => $this->daysBeforePayment(),
             'created_at' => $this->created_at->toIsoString(),
         ];
     }

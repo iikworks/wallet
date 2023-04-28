@@ -56,7 +56,7 @@ readonly class DashboardAction
                     )),
                 ],
                 'subscriptions' => [
-                    'list' => new SubscriptionCollection($this->filterSubscriptions($this->getSubscriptions($accountsIds), $now)),
+                    'list' => new SubscriptionCollection($this->filterSubscriptions($this->getSubscriptions($accountsIds), $now)->take(3)),
                     'count' => $this->getSubscriptionsCount($accountsIds),
                 ],
             ]
@@ -111,7 +111,8 @@ readonly class DashboardAction
         $sum = 0;
 
         foreach ($accounts as $account) {
-            $accountSum = Transaction::query()->whereMonth('created_at', $now->format('m'))
+            $accountSum = Transaction::query()->where('account_id', $account->id)
+                ->whereMonth('created_at', $now->format('m'))
                 ->whereYear('created_at', $now->format('Y'))
                 ->where('type', $type)
                 ->sum('amount');
