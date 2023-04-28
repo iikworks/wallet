@@ -33,7 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('accounts')->group(function () {
-        Route::get('/', [AccountController::class, 'getAll'])->name('accounts');
+        Route::get('/all', [AccountController::class, 'getAll'])->name('accounts');
+        Route::get('/', [AccountController::class, 'get'])->name('accounts');
         Route::get('/{id}', [AccountController::class, 'getOne'])->name('accounts.get-one');
 
         Route::post('/', [AccountController::class, 'store'])->name('accounts.store');
@@ -54,7 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('/organizations')->group(function () {
-        Route::get('/', [OrganizationController::class, 'getAll'])->name('organizations');
+        Route::get('/all', [OrganizationController::class, 'getAll'])->name('organizations');
+        Route::get('/', [OrganizationController::class, 'get'])->name('organizations');
         Route::get('/{id}', [OrganizationController::class, 'getOne'])->name('organizations.get-one');
     });
 

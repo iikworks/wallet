@@ -18,7 +18,18 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OrganizationController extends Controller
 {
-    public function getAll(Request $request): OrganizationCollection
+    public function getAll(): OrganizationCollection
+    {
+        return new OrganizationCollection([
+            'data' => Organization::query()
+                ->latest('created_at')
+                ->whereNull('parent_id')
+                ->with('childrenRecursive')
+                ->get()
+        ]);
+    }
+
+    public function get(Request $request): OrganizationCollection
     {
         return new OrganizationCollection(Organization::query()
             ->latest('created_at')
