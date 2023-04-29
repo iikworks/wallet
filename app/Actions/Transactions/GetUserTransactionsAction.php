@@ -15,6 +15,7 @@ readonly class GetUserTransactionsAction
         return Transaction::query()
             ->whereIn('account_id', $userAccountsIds)
             ->with(['account.user', 'organization'])
+            ->latest('date')
             ->paginate(
                 perPage: $limit,
                 page: $page,
