@@ -15,10 +15,10 @@ readonly class UpdateOrganizationAction
                 if (!Organization::query()->find($data['parent_id']))
                     throw new ModelNotFoundException("parent id not found");
             } else $data['parent_id'] = null;
-        }
 
-        if ($organizationId == $data['parent_id'])
-            throw new InvalidArgumentException('Parent id cannot be yourself');
+            if ($organizationId == $data['parent_id'])
+                throw new InvalidArgumentException('Parent id cannot be yourself');
+        }
 
         $organization = Organization::query()->find($organizationId);
         if (!$organization)
