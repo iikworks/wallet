@@ -31,8 +31,7 @@ class OrganizationController extends Controller
     {
         return new OrganizationCollection(Organization::query()
             ->latest('created_at')
-            ->whereNull('parent_id')
-            ->with('childrenRecursive')
+            ->with('parent')
             ->paginate(
                 perPage: $request->query('limit', 50),
                 page: $request->query('page', 1),

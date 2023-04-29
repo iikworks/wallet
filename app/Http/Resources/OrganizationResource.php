@@ -16,8 +16,16 @@ class OrganizationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $parent = null;
+        if ($this->parent) $parent = [
+            'id' => $this->parent?->id,
+            'title' => $this->parent->title,
+            'vulgar_title' => $this->parent->vulgar_title,
+        ];
+
         return [
             'id' => $this->id,
+            'parent' => $parent,
             'title' => $this->title,
             'vulgar_title' => $this->vulgar_title,
             'children' => $this->getChildren(),
