@@ -67,7 +67,7 @@ readonly class DashboardAction
     {
         return Transaction::query()
             ->whereIn('account_id', $accountsIds)
-            ->orderBy('date', 'desc')
+            ->latest('date')
             ->limit(10)
             ->get();
     }
