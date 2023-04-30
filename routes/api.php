@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('accounts')->group(function () {
-        Route::get('/all', [AccountController::class, 'getAll'])->name('accounts');
+        Route::get('/all', [AccountController::class, 'getAll'])->name('accounts.all');
         Route::get('/', [AccountController::class, 'get'])->name('accounts');
         Route::get('/{id}', [AccountController::class, 'getOne'])->name('accounts.get-one');
 
@@ -55,13 +55,14 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('/organizations')->group(function () {
-        Route::get('/all', [OrganizationController::class, 'getAll'])->name('organizations');
+        Route::get('/all', [OrganizationController::class, 'getAll'])->name('organizations.all');
         Route::get('/', [OrganizationController::class, 'get'])->name('organizations');
         Route::get('/{id}', [OrganizationController::class, 'getOne'])->name('organizations.get-one');
     });
 
     Route::prefix('/banks')->group(function () {
-        Route::get('/', [BankController::class, 'getAll'])->name('banks');
+        Route::get('/all', [BankController::class, 'getAll'])->name('banks.all');
+        Route::get('/', [BankController::class, 'get'])->name('banks');
         Route::get('/{id}', [BankController::class, 'getOne'])->name('banks.get-one');
     });
 

@@ -16,7 +16,14 @@ use Illuminate\Http\Request;
 
 class BankController extends Controller
 {
-    public function getAll(Request $request): BankCollection
+    public function getAll(): BankCollection
+    {
+        return new BankCollection(Bank::query()
+            ->latest('created_at')
+            ->get());
+    }
+
+    public function get(Request $request): BankCollection
     {
         return new BankCollection(Bank::query()
             ->latest('created_at')
