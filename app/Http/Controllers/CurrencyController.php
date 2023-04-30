@@ -19,6 +19,8 @@ class CurrencyController extends Controller
             $currencies->add($currency);
         }
 
-        return response()->json(new CurrencyCollection($currencies));
+        return response()->json([
+            'data' => new CurrencyCollection($currencies),
+        ]);
     }
 }
