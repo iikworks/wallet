@@ -8,6 +8,11 @@ class CurrencyController extends Controller
 {
     public function list(): JsonResponse
     {
-        return response()->json(array_keys(config('constants.currencies')));
+        $currencies = [];
+        foreach (array_keys(config('constants.currencies')) as $currency) {
+            $currencies[$currency] = __('main.currencies.' . $currency);
+        }
+
+        return response()->json($currencies);
     }
 }
