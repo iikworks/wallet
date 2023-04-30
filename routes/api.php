@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TransactionController;
@@ -31,6 +32,7 @@ Route::prefix('/auth')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/currencies', [CurrencyController::class, 'list'])->name('currencies');
 
     Route::prefix('accounts')->group(function () {
         Route::get('/all', [AccountController::class, 'getAll'])->name('accounts.all');
