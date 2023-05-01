@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\UserController;
+use App\Http\Controllers\CardSystemController;
 use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SubscriptionController;
@@ -29,6 +30,9 @@ Route::prefix('/auth')->group(function () {
 
     Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'user'])->name('user');
 });
+
+Route::get('/card-systems', [CardSystemController::class, 'list'])->name('card-systems');
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
