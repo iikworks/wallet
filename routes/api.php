@@ -31,12 +31,10 @@ Route::prefix('/auth')->group(function () {
     Route::middleware('auth:sanctum')->get('/user', [UserController::class, 'user'])->name('user');
 });
 
-Route::get('/card-systems', [CardSystemController::class, 'list'])->name('card-systems');
-
-
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
     Route::get('/currencies', [CurrencyController::class, 'list'])->name('currencies');
+    Route::get('/card-systems', [CardSystemController::class, 'list'])->name('card-systems');
 
     Route::prefix('accounts')->group(function () {
         Route::get('/all', [AccountController::class, 'getAll'])->name('accounts.all');
