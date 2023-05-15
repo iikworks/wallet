@@ -54,6 +54,7 @@ readonly class DashboardAction
                         $now,
                         Transaction::REPLENISHMENT_TYPE
                     )),
+                    'statistics_by_month' => $this->getTransactionsSumByTypeAndMonth($user->id, $currency),
                 ],
                 'subscriptions' => [
                     'list' => new SubscriptionCollection($this->filterSubscriptions($this->getSubscriptions($accountsIds), $now)->take(3)),
@@ -126,6 +127,39 @@ readonly class DashboardAction
         }
 
         return $sum;
+    }
+
+    private function getTransactionsSumByTypeAndMonth(int $userId, string $currency): Collection
+    {
+        $transactionsSumByTypeMonthAndCurrency = Transaction::query()->selectRaw('to_char(date, \'YYYY-MM\') as month, currency as currency, CAST(SUM(CASE WHEN transactions.type = \'' . Transaction::REPLENISHMENT_TYPE . '\' THEN transactions.amount ELSE 0 END) AS BIGINT) as topup_total, CAST(SUM(CASE WHEN transactions.type = \'' . Transaction::EXPENSE_TYPE . '\' THEN transactions.amount ELSE 0 END) AS BIGINT) as withdrawal_total')
+            ->join('accounts', 'transactions.account_id', '=', 'accounts.id')
+            ->join('users', 'accounts.user_id', '=', 'users.id')
+            ->where('users.id', $userId)
+            ->groupBy('month')
+            ->groupBy('currency')
+            ->get();
+
+        $transactionsSumByTypeAndMonth = collect();
+
+        $transactionsSumByTypeMonthAndCurrency->map(function ($value) use ($currency, $transactionsSumByTypeAndMonth) {
+            if ($value->currency == $currency) {
+                $transactionsSumByTypeAndMonth->add($value);
+            } else {
+                $transactionsSumByTypeAndMonth->map(function ($valueWithSelectedCurrency) use ($value, $currency) {
+                    if ($valueWithSelectedCurrency->month == $value->month) {
+                        $valueWithSelectedCurrency->topup_total += ($this->convertAction)($value->currency, $currency, $value->topup_total);
+                        $valueWithSelectedCurrency->withdrawal_total += ($this->convertAction)($value->currency, $currency, $value->withdrawal_total);
+                    }
+                });
+            }
+        });
+
+        $transactionsSumByTypeAndMonth->map(function ($value) {
+            $value->topup_total = normalize_number($value->topup_total);
+            $value->withdrawal_total = normalize_number($value->withdrawal_total);
+        });
+
+        return $transactionsSumByTypeAndMonth;
     }
 
     public function filterSubscriptions(Collection $subscriptions, Carbon $now): Collection
