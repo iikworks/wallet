@@ -42,18 +42,6 @@ readonly class DashboardAction
                     'latest' => new TransactionCollection($latestTransactions),
                     'latest_first' => $latestTransactions->first() ? new TransactionResource($latestTransactions->first()) : null,
                     'count' => $this->getTransactionsCount($accountsIds),
-                    'sum_expenses_at_this_month' => normalize_number($this->getTransactionsSumAtThisMonth(
-                        $accounts,
-                        $currency,
-                        $now,
-                        Transaction::EXPENSE_TYPE,
-                    )),
-                    'sum_replenishments_at_this_month' => normalize_number($this->getTransactionsSumAtThisMonth(
-                        $accounts,
-                        $currency,
-                        $now,
-                        Transaction::REPLENISHMENT_TYPE
-                    )),
                     'statistics_by_month' => $this->getTransactionsSumByTypeAndMonth($user->id, $currency),
                 ],
                 'subscriptions' => [
@@ -102,33 +90,6 @@ readonly class DashboardAction
             ->count();
     }
 
-    private function getTransactionsSumAtThisMonth(
-        Collection $accounts,
-        string     $currency,
-        Carbon     $now,
-        string     $type
-    ): int
-    {
-        $sum = 0;
-
-        foreach ($accounts as $account) {
-            $accountSum = Transaction::query()->where('account_id', $account->id)
-                ->whereMonth('created_at', $now->format('m'))
-                ->whereYear('created_at', $now->format('Y'))
-                ->where('type', $type)
-                ->sum('amount');
-
-            if ($account->currency == $currency) {
-                $sum += $accountSum;
-                continue;
-            }
-
-            $sum += ($this->convertAction)($account->currency, $currency, $accountSum);
-        }
-
-        return $sum;
-    }
-
     private function getTransactionsSumByTypeAndMonth(int $userId, string $currency): Collection
     {
         $transactionsSumByTypeMonthAndCurrency = Transaction::query()->selectRaw('to_char(date, \'YYYY-MM\') as month, currency as currency, CAST(SUM(CASE WHEN transactions.type = \'' . Transaction::REPLENISHMENT_TYPE . '\' THEN transactions.amount ELSE 0 END) AS BIGINT) as topup_total, CAST(SUM(CASE WHEN transactions.type = \'' . Transaction::EXPENSE_TYPE . '\' THEN transactions.amount ELSE 0 END) AS BIGINT) as withdrawal_total')
@@ -137,6 +98,7 @@ readonly class DashboardAction
             ->where('users.id', $userId)
             ->groupBy('month')
             ->groupBy('currency')
+            ->latest('month')
             ->get();
 
         $transactionsSumByTypeAndMonth = collect();
