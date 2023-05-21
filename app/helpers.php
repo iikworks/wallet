@@ -8,6 +8,12 @@ if (!function_exists('normalize_number')) {
         return $number / 100;
     }
 }
+if (!function_exists('normalize_course')) {
+    function normalize_course(int $number): int|float
+    {
+        return $number / 10000;
+    }
+}
 
 if (!function_exists('currency_number')) {
     function currency_number(int $number, string $currency): string

@@ -7,6 +7,7 @@ use App\Http\Resources\AccountCollection;
 use App\Http\Resources\SubscriptionCollection;
 use App\Http\Resources\TransactionCollection;
 use App\Http\Resources\TransactionResource;
+use App\Models\ExchangeRate;
 use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Models\User;
@@ -31,8 +32,18 @@ readonly class DashboardAction
         $latestTransactions = $this->getLatestTransactions($accountsIds);
         $now = now();
 
+        $exchangeRates = ExchangeRate::query()->where('from', $currency)->get();
+
         return response()->json([
             'data' => [
+                'exchange_rates' => $exchangeRates->map(function (ExchangeRate $exchangeRate) {
+                    return [
+                        'from' => $exchangeRate->from,
+                        'to' => $exchangeRate->to,
+                        'rate' => normalize_course($exchangeRate->rate),
+                        'updated_at' => $exchangeRate->updated_at,
+                    ];
+                }),
                 'has_other_currencies' => $this->hasOtherCurrencies($accounts, $currency),
                 'accounts' => [
                     'list' => new AccountCollection($accounts->take(3)),
